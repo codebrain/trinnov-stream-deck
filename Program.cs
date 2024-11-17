@@ -16,7 +16,9 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 var exitEvent = new ManualResetEvent(false);
-var url = new Uri("ws://192.168.1.145/ws");
+Console.WriteLine("Enter IP Address of Nova (for example: 192.168.4.10)");
+var ipAddress = Console.ReadLine();
+var url = new Uri("ws://" + ipAddress + "/ws");
 
 var TRINNOV_OPTIMISED = true;
 var TRINNOV_IS_DIMMED = false;
