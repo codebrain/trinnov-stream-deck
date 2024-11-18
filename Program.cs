@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿// ReSharper disable AccessToDisposedClosure
+
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using OpenMacroBoard.SDK;
@@ -46,7 +48,7 @@ using var client = new WebsocketClient(url);
 client.ReconnectTimeout = null;
 client.MessageReceived.Subscribe(msg =>
 {
-    var message = Encoding.UTF8.GetString(msg.Binary);
+    var message = Encoding.UTF8.GetString(msg.Binary!);
     Log.Debug($"MessageReceived: {message}");
 
     var bypass = BypassRegEx().Match(message);
@@ -83,7 +85,7 @@ await client.StartOrFail();
 
 // Set PC (Digital)
 Log.Debug("Digital sent");
-Task.Run(() => client.Send(new byte[]
+await Task.Run(() => client.Send(new byte[]
 {
     0x00, 0x00, 0x00, 0x34, 0x03, 0x00, 0x00, 0x00,
     0x14, 0x2F, 0x6D, 0x6F, 0x6E, 0x69, 0x74, 0x6F,
@@ -95,7 +97,7 @@ Task.Run(() => client.Send(new byte[]
 }));
 
 // Get the Mute status
-Task.Run(() => client.Send(new byte[]
+await Task.Run(() => client.Send(new byte[]
 {
     0x00, 0x00, 0x00, 0x1B, 0x01, 0x00, 0x00, 0x00,
     0x16, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -104,7 +106,7 @@ Task.Run(() => client.Send(new byte[]
 }));
 
 // Get the Optimiser bypass status
-Task.Run(() => client.Send(new byte[]
+await Task.Run(() => client.Send(new byte[]
 {
     0x00, 0x00, 0x00, 0x1D, 0x01, 0x00, 0x00, 0x00,
     0x18, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -114,7 +116,7 @@ Task.Run(() => client.Send(new byte[]
 }));
 
 // Get the Display Volume
-Task.Run(() => client.Send(new byte[]
+await Task.Run(() => client.Send(new byte[]
 {
     0x00, 0x00, 0x00, 0x25, 0x01, 0x00, 0x00, 0x00,
     0x20, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -125,7 +127,7 @@ Task.Run(() => client.Send(new byte[]
 }));
 
 // Get the Dim status
-Task.Run(() => client.Send(new byte[]
+await Task.Run(() => client.Send(new byte[]
 {
     0x00, 0x00, 0x00, 0x1A, 0x01, 0x00, 0x00, 0x00,
     0x15, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -149,7 +151,7 @@ Console.ReadKey();
 exitEvent.WaitOne();
 return;
 
-void HandleKeyPress(object sender, KeyEventArgs arg)
+async void HandleKeyPress(object sender, KeyEventArgs arg)
 {
     switch (arg.Key)
     {
@@ -158,7 +160,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             return;
         case VOL_DOWN:
             ImageKey(VOL_DOWN, "vol-down");
-            Task.Run(() => client.Send(new byte[]
+            await Task.Run(() => client.Send(new byte[]
             {
                 0x00, 0x00, 0x00, 0x24, 0x03, 0x00, 0x00, 0x00,
                 0x11, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -173,7 +175,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
         case VOL_UP:
             ImageKey(VOL_UP, "vol-up");
             Log.Debug("Volume up sent");
-            Task.Run(() => client.Send(new byte[]
+            await Task.Run(() => client.Send(new byte[]
             {
                 0x00, 0x00, 0x00, 0x23, 0x03, 0x00, 0x00, 0x00,
                 0x11, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -191,7 +193,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Unmute
                 Log.Debug("Unmute sent");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x24, 0x03, 0x00, 0x00, 0x00,
                     0x11, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -204,7 +206,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Mute
                 Log.Debug("Mute sent");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x23, 0x03, 0x00, 0x00, 0x00,
                     0x11, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -225,7 +227,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Set unoptimised
                 Log.Debug("Optimiser off sent");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x26, 0x03, 0x00, 0x00, 0x00,
                     0x12, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -239,7 +241,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Set Optimiser on
                 Log.Debug("Optimiser on sent");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x27, 0x03, 0x00, 0x00, 0x00,
                     0x12, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -261,7 +263,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
                 // Set SSL (Analog 1 + 2)
                 Log.Debug("Analog 1 + 2 sent");
                 ImageKey(INPUT_TOGGLE, "analog");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x34, 0x03, 0x00, 0x00, 0x00,
                     0x14, 0x2F, 0x6D, 0x6F, 0x6E, 0x69, 0x74, 0x6F,
@@ -277,7 +279,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
                 // Set PC (Digital)
                 Log.Debug("Digital sent");
                 ImageKey(INPUT_TOGGLE, "digital");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x34, 0x03, 0x00, 0x00, 0x00,
                     0x14, 0x2F, 0x6D, 0x6F, 0x6E, 0x69, 0x74, 0x6F,
@@ -298,7 +300,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
         case REFERENCE_LEVEL:
             Log.Debug("Ref sent");
             ImageKey(REFERENCE_LEVEL, "ref");
-            Task.Run(() => client.Send(new byte[]
+            await Task.Run(() => client.Send(new byte[]
             {
                 0x00, 0x00, 0x00, 0x2C, 0x03, 0x00, 0x00, 0x00,
                 0x11, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -317,7 +319,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Undim
                 Log.Debug("Undim sent");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x23, 0x03, 0x00, 0x00, 0x00,
                     0x11, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
@@ -330,7 +332,7 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // dim
                 Log.Debug("Dim sent");
-                Task.Run(() => client.Send(new byte[]
+                await Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x22, 0x03, 0x00, 0x00, 0x00,
                     0x11, 0x2F, 0x6F, 0x70, 0x74, 0x69, 0x6D, 0x69,
