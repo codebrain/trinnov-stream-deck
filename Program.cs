@@ -47,39 +47,38 @@ client.ReconnectTimeout = null;
 client.MessageReceived.Subscribe(msg =>
 {
     var message = Encoding.UTF8.GetString(msg.Binary);
-    Log.Debug($"Message received: {message}");
+    Log.Debug($"MessageReceived: {message}");
 
-    var bypass = Regex.Match(message, @".*\/optimizer\/volume\/bypass\{.*?""[^""]*"":(true|false)\}.*");
+    var bypass = BypassRegEx().Match(message);
     if (bypass.Success)
     {
         TRINNOV_OPTIMISED = bypass.Groups[1].Value != "true";
         ImageKey(OPTIMISER_TOGGLE, TRINNOV_OPTIMISED ? "optimiser-on" : "optimiser-off");
     }
 
-    //0 /optimizer/volume/display_volume{"_":-20.0}$/optimizer/volume/dim{"_":true}
-    var display_volume = Regex.Match(message, @".*\/optimizer\/volume\/display_volume\{.*?""_"":(-?\d+(\.\d+)?)\}");
-    if (display_volume.Success)
+    var displayVolume = DisplayVolumeRegEx().Match(message);
+    if (displayVolume.Success)
     {
-        TRINNOV_VOLUME = Convert.ToInt32(double.Parse(display_volume.Groups[1].Value));
+        TRINNOV_VOLUME = Convert.ToInt32(double.Parse(displayVolume.Groups[1].Value));
         ImageKey(VOL_MUTE_TOGGLE, TRINNOV_VOLUME == 0 ? "vol-zero" : "vol", true);
     }
 
-    var dim = Regex.Match(message, @".*\/optimizer\/volume\/dim\{.*?""[^""]*"":(true|false)\}.*");
+    var dim = DimRegEx().Match(message);
     if (dim.Success)
     {
         TRINNOV_IS_DIMMED = dim.Groups[1].Value == "true";
         ImageKey(DIM_TOGGLE, TRINNOV_IS_DIMMED ? "dim-on" : "dim");
     }
 
-    var mute = Regex.Match(message, @".*\/optimizer\/volume\/mute\{.*?""[^""]*"":(true|false)\}.*");
+    var mute = MuteRegEx().Match(message);
     if (mute.Success)
     {
         TRINNOV_IS_MUTED = mute.Groups[1].Value == "true";
         ImageKey(VOL_MUTE_TOGGLE, TRINNOV_IS_MUTED ? "vol-mute" : TRINNOV_VOLUME == 0 ? "vol-zero" : "vol", true);
     }
 });
-client.DisconnectionHappened.Subscribe(msg => Log.Information($"Message received: {msg.Exception}"));
-client.ReconnectionHappened.Subscribe(info => Log.Information($"Reconnection happened, type: {info.Type}"));
+client.DisconnectionHappened.Subscribe(msg => Log.Information($"DisconnectionHappened received: {msg.Exception}"));
+client.ReconnectionHappened.Subscribe(info => Log.Information($"ReconnectionHappened, type: {info.Type}"));
 await client.StartOrFail();
 
 // Set PC (Digital)
@@ -192,7 +191,6 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Unmute
                 Log.Debug("Unmute sent");
-                //ImageKey(VOL_MUTE_TOGGLE, "vol");
                 Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x24, 0x03, 0x00, 0x00, 0x00,
@@ -206,7 +204,6 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Mute
                 Log.Debug("Mute sent");
-                //ImageKey(VOL_MUTE_TOGGLE, "vol-mute");
                 Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x23, 0x03, 0x00, 0x00, 0x00,
@@ -228,7 +225,6 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Set unoptimised
                 Log.Debug("Optimiser off sent");
-                //ImageKey(OPTIMISER_TOGGLE, "optimiser-off");
                 Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x26, 0x03, 0x00, 0x00, 0x00,
@@ -243,7 +239,6 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Set Optimiser on
                 Log.Debug("Optimiser on sent");
-                //ImageKey(OPTIMISER_TOGGLE, "optimiser-on");
                 Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x27, 0x03, 0x00, 0x00, 0x00,
@@ -322,7 +317,6 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // Undim
                 Log.Debug("Undim sent");
-                //ImageKey(DIM_TOGGLE, "dim");
                 Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x23, 0x03, 0x00, 0x00, 0x00,
@@ -336,7 +330,6 @@ void HandleKeyPress(object sender, KeyEventArgs arg)
             {
                 // dim
                 Log.Debug("Dim sent");
-                //ImageKey(DIM_TOGGLE, "dim-on");
                 Task.Run(() => client.Send(new byte[]
                 {
                     0x00, 0x00, 0x00, 0x22, 0x03, 0x00, 0x00, 0x00,
@@ -370,4 +363,19 @@ void ImageKey(int key, string path, bool vol = false)
     }
 
     board.SetKeyBitmap(key, KeyBitmap.Create.FromImageSharpImage(image));
+}
+
+internal partial class Program
+{
+    [GeneratedRegex(""".*\/optimizer\/volume\/bypass\{.*?"[^"]*":(true|false)\}.*""")]
+    private static partial Regex BypassRegEx();
+
+    [GeneratedRegex(""".*\/optimizer\/volume\/display_volume\{.*?"_":(-?\d+(\.\d+)?)\}""")]
+    private static partial Regex DisplayVolumeRegEx();
+
+    [GeneratedRegex(""".*\/optimizer\/volume\/dim\{.*?"[^"]*":(true|false)\}.*""")]
+    private static partial Regex DimRegEx();
+
+    [GeneratedRegex(""".*\/optimizer\/volume\/mute\{.*?"[^"]*":(true|false)\}.*""")]
+    private static partial Regex MuteRegEx();
 }
