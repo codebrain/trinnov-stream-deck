@@ -33,6 +33,4 @@ It communicates directly with the Nova unit using WebSockets and binary messages
    git clone https://github.com/codebrain/trinnov-stream-deck.git
    cd trinnov-stream-deck
 
-2. Modify the IP address of the Nova: https://github.com/codebrain/trinnov-stream-deck/blob/e458720cce3b13f901d5fd1aa4d33a44d399a8ec/Program.cs#L19
-
-3. `dotnet run`
+2. `dotnet run`
